@@ -5,6 +5,9 @@ shinyUI(fluidPage(
     titlePanel("WilMboVic Fantasy Hockey History and Records"),
     
     navlistPanel(
+        "Current Week",
+        tabPanel("Live View",
+                 DT::dataTableOutput("weekView")),
         "Owner Stats",
         tabPanel("Season Stats",
                  DT::dataTableOutput("ownerSeason")
@@ -28,6 +31,8 @@ shinyUI(fluidPage(
         ),
         "Draft Stats",
         tabPanel("Season Stats",
-                 DT::dataTableOutput("pickStats"))
+                 DT::dataTableOutput("pickStats")),
+        tabPanel("Previous Finish Stats",
+                 DT::dataTableOutput("prevFinishStats"))
     )
 ))

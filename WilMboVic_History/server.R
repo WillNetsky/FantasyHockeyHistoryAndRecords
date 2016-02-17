@@ -3,6 +3,10 @@ library(shiny)
 source("History and Records.R")
 
 shinyServer(function(input, output) {
+    output$weekView <- DT::renderDataTable(DT::datatable(
+        getWeekView(), options = list(searching=F,paging=F)
+    ))
+    
     output$ownerSeason <- DT::renderDataTable(DT::datatable(
         getOwnerSeason(history), options = list(searching=F, paging=F)
     ))
@@ -29,5 +33,8 @@ shinyServer(function(input, output) {
     
     output$pickStats <- DT::renderDataTable(DT::datatable(
         getPickStats(history), options = list(pageLength=15, paging=F, searching = F)
+    ))
+    output$prevFinishStats <- DT::renderDataTable(DT::datatable(
+        getPrevFinishStats(), options = list(paging=F,searching=F)
     ))
 })
