@@ -1,12 +1,16 @@
 library(XML)
 library(plyr)
 library(ggplot2)
+library(googlesheets)
 
 # Set working directory and cleanup the environment
 setwd("C:/Users/Netsky/Dropbox/Code/Fantasy Hockey")
 rm(list = ls())
 
 source("loadStats.R")
+
+# Constants
+manualWeek = F
 
 # Urls to find player and team stats
 statsUrl = "http://sports.yahoo.com/nhl/stats/byposition?pos=C,RW,LW,D&conference=NHL&year=season_2015&qualified=1"
@@ -58,19 +62,20 @@ teams$GACoeff = teams$GAperG/lgAvg$GAperG
 NHLSchedule = read.csv("NHLSchedule.csv")
 NHLSchedule$WCTime = NULL
 
+fantasySchedule = loadFantasySchedule()
 #take input for what week it is
-# repeat{
-#   weekInput = readline("enter week #: ")
-#   if(weekInput > 0 && weekInput < 27){
-#     break
-#   }
-# }
+if(manualWeek){
+ repeat{
+   weekInput = readline("enter week #: ")
+   if(weekInput > 0 && weekInput < 27){
+     break
+   }
+ }
+} else{
 #automated week input
-fantasySchedule = read.csv("fantasySchedule.csv")
-fantasySchedule$Starts = as.Date(as.character(fantasySchedule$Starts), "%m/%d/%Y")
-fantasySchedule$Ends = as.Date(as.character(fantasySchedule$Ends),"%m/%d/%Y")
-weekInput = which(fantasySchedule$Ends >= Sys.Date())[1]
-weekInput = weekInput+1
+    weekInput = fantasyWeekFind(Sys.Date())
+}
+# subset the NHL Schedule for this week
 NHLSchedule = subset(NHLSchedule, Week==weekInput)
 
 #find opponents
@@ -81,14 +86,14 @@ teamOpponents = sapply(teamNames, function(x) setdiff(as.vector(t(NHLSchedule[wh
 teams$numGames = sapply(teamOpponents, length)
 
 # find mean gaCoeff of opponents
-teamOpponents = lapply(teamOpponents, function(x) laply(x,function(x) teams$GACoeff[teams$Team == x]))
-teams$oppCoeff = sapply(teamOpponents,mean)
+teamOppCoeff = lapply(teamOpponents, function(x) laply(x,function(x) teams$GACoeff[teams$Team == x]))
+teams$oppCoeff = sapply(teamOppCoeff,mean)
 
 # add team based statistics to skater rows
 overall = merge(overall,teams[c("yTeam","numGames","oppCoeff")], by.x="yTeam", by.y = "yTeam", all.x=T)
 
 # remove players that are inactive
-inactives = read.csv("inactives.csv")
+inactives = loadInactives()
 inactives = subset(inactives, Return > weekInput, select=c(Player))
 overall = overall[!overall$Name %in% inactives$Player,]
 
@@ -103,20 +108,20 @@ overall$RegProjPts = overall$regPtsPerG*overall$numGames*overall$oppCoeff
 overall$vukProjPts = overall$pPtsPerG*overall$numGames*overall$oppCoeff
 overall$vukProjPts[is.na(overall$vukProjPts)] = 0
 overall$pPtsPerG[is.na(overall$pPtsPerG)] = 0
-sampleSize = 41
-overall$BayesProjPts = ((sampleSize*overall$pPtsPerG + overall$regPts)/(sampleSize+overall$GP))*overall$numGames*overall$oppCoeff
+sampleSize = 20
+overall$BayesProjPts = ((sampleSize*overall$pPtsPerG + overall$Pts)/(sampleSize+overall$GP))*overall$numGames*overall$oppCoeff
 
 #overall <- overall[order(-overall$BayesProjPts),]
 #overall <- 
 
 # kmeans clustering
-kmeansFit <-kmeans(overall[c("RegProjPts","vukProjPts")], 50)
-overall <- data.frame(overall,as.factor(kmeansFit$cluster))
+#kmeansFit <-kmeans(overall, 50)
+#overall <- data.frame(overall,as.factor(kmeansFit$cluster))
 
 overall <- overall[order(-overall$BayesProjPts),]
-ggplot(overall[1:50,],aes(RegProjPts,vukProjPts))+
+ggplot(overall[1:50,],aes(ActualProjPts,vukProjPts))+
   ggtitle(paste("Week ",weekInput," Projections"))+
-  geom_point(aes(size=numGames, color=as.factor.kmeansFit.cluster.,shape=Pos)) +
+  geom_point(aes(size=numGames))+#, color=as.factor.kmeansFit.cluster.,shape=Pos)) +
   #coord_cartesian(xlim=c(2,5.75),ylim=c(2,5.75))  +
   geom_text(aes(label=Name,vjust=-1))
 

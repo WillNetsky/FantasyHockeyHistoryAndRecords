@@ -1,9 +1,18 @@
 library(data.table)
+library(XML)
+library(plyr)
+library(dplyr)
+library(ggplot2)
 
 # Urls to find player and team stats
 statsUrl = "http://sports.yahoo.com/nhl/stats/byposition?pos=C,RW,LW,D&conference=NHL&year=season_2015&qualified=1"
 teamStatsURL = "http://www.hockey-reference.com/leagues/NHL_2016.html"
 injuryUrl = "http://www.donbest.com/nhl/injuries/"
+
+# load google sheet
+sheet_key <- "1BB5kKPN63IO4zfpnIoO4jrRYl0PUC6VPLRqO9IeQww0"
+ss <- googlesheets::gs_key(sheet_key)
+
 
 # loadStatsUrl loads an html table from a specified url into a dataframe
 # by default, it will load the biggest table on the url
@@ -43,19 +52,12 @@ cleanTeamStats <- function(teams){
     teams
 }
 
-# return the laste completed week of the fantasy season on a date
+# returns the next fantasy week based on a date
 fantasyWeekFind <- function(date,schedule=fantasySchedule){
-    week = which(fantasySchedule$Ends >= as.Date(date))[1]
+    week = which(fantasySchedule$Starts > as.Date(date))[1]
     week
 }
 
-# DEPRECATED: returns a basic hockey-reference ID for the player based on their
-# first and last name. replaced by the dataframe generated from loadHRIDs
-hockeyRefID <- function(name){
-    name = unlist(strsplit(name," "))
-    ID = paste(substr(name[2],1,5),substr(name[1],1,2),"01",sep="")
-    ID
-}
 
 # pulls the gamelog for a playerID from hockey-reference
 loadPlayerLog <- function(ID,year="2016"){
@@ -128,4 +130,30 @@ allPlayerWeeklyReport <- function(){
     report$points = as.numeric(as.character(report$points))
     names(report) = c("Name","Week","Points")
     report
+}
+
+## function to test whether I have the correct statistics in the history, based on hockey-reference game logs
+historySanityTest <- function(history){
+    playerIDs <- read.csv("playerIDs.csv",stringsAsFactors = F)
+    playerWeeks <- select(history, Name = Pick, Week,Games,Total)
+
+    for(i in 1:nrow(history)){
+        player <- history$Pick[i]
+        id <- filter(playerIDs, Name == history$Pick[i]) %>% select(ID)
+        playerWeeks$HR[i] <- playerWeeklyReport(player,id,week)
+    }
+    playerWeeks
+}
+
+# load inactives from the google sheet
+loadInactives <- function(){
+    ss %>% gs_read("Standings / Rules",range=cell_cols(1:4))
+}
+
+# load fantasy schedule from the google sheet
+loadFantasySchedule <- function(){
+    fantasySchedule <- ss %>% gs_read("Standings / Rules",range=cell_limits(c(1,6),c(28,8)))
+    fantasySchedule$Starts = as.Date(as.character(fantasySchedule$Starts), "%m/%d/%Y")
+    fantasySchedule$Ends = as.Date(as.character(fantasySchedule$Ends),"%m/%d/%Y")
+    fantasySchedule
 }
