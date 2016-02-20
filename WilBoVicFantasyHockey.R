@@ -115,13 +115,14 @@ overall$BayesProjPts = ((sampleSize*overall$pPtsPerG + overall$Pts)/(sampleSize+
 #overall <- 
 
 # kmeans clustering
-#kmeansFit <-kmeans(overall, 50)
-#overall <- data.frame(overall,as.factor(kmeansFit$cluster))
+kmeansFit <-with(overall,(kmeans(ActualProjPts+vukProjPts, 70)))
+overall <- data.frame(overall,as.factor(kmeansFit$cluster))
 
 overall <- overall[order(-overall$BayesProjPts),]
 ggplot(overall[1:50,],aes(ActualProjPts,vukProjPts))+
   ggtitle(paste("Week ",weekInput," Projections"))+
-  geom_point(aes(size=numGames))+#, color=as.factor.kmeansFit.cluster.,shape=Pos)) +
+  geom_point(aes(size=numGames, color=as.factor.kmeansFit.cluster.)) +
+    scale_radius(range = c(1,5)) + 
   #coord_cartesian(xlim=c(2,5.75),ylim=c(2,5.75))  +
   geom_text(aes(label=Name,vjust=-1))
 
