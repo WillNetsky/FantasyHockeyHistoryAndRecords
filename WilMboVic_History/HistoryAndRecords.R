@@ -27,6 +27,7 @@ getWeekSummary <- function(week){
     summary
 }
 
+## Testing: it seems like its fucking me over, probably a bug in the tiebreakers
 monteCarloSimulation <- function(summary,numSims){
     simulation <- data.frame(Owner = c("Jumbo","Victor","Will"),
                              wins = c(0,0,0),

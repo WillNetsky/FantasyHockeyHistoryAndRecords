@@ -27,7 +27,6 @@ getWeekSummary <- function(week){
     summary
 }
 
-## Testing: it seems like its fucking me over, probably a bug in the tiebreakers
 monteCarloSimulation <- function(summary,numSims){
     simulation <- data.frame(Owner = c("Jumbo","Victor","Will"),
                              wins = c(0,0,0),
@@ -42,7 +41,6 @@ monteCarloSimulation <- function(summary,numSims){
         sim <- summary
         players <- 1:nrow(summary)
         for(player in players){
-            #set.seed(as.numeric(Sys.time()))
             pts <- rpois(summary$GamesRemaining[player],0.74)
             sim$Points[player] <- sum(pts) + summary$Points[player]
             sim$Zeros[player] <- sim$Zeros[player] + sum(pts==0)
@@ -58,6 +56,7 @@ monteCarloSimulation <- function(summary,numSims){
                     zerosTies <- zerosTies + 1
                     if(length(unique(sim$Singles[ties])) == 1){
                         completeTies <- completeTies + 1
+                        next
                     }
                     else{
                         winner <- ties[which.min(sim$Singles[ties])]
@@ -80,7 +79,6 @@ monteCarloSimulation <- function(summary,numSims){
                   gamesTies,"games Ties\n",
                   zerosTies,"zeros Ties\n",
                   completeTies,"complete ties"))
-    simulation$wins <- NULL
     summary
 }
 
