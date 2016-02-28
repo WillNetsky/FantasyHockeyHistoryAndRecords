@@ -80,17 +80,23 @@ NHLSchedule <- subset(NHLSchedule, Week==weekInput)
 
 #find opponents
 teamNames <- as.vector(teams$Team)
-teamOpponents <- sapply(teamNames, function(x) setdiff(as.vector(t(NHLSchedule[which(NHLSchedule$Away == x | NHLSchedule$Home == x),c("Home", "Away")] )),x))
+teamOpponents <- sapply(teamNames, 
+  function(x) setdiff(as.vector(t(NHLSchedule[which(NHLSchedule$Away == x |
+                                  NHLSchedule$Home == x),
+                                  c("Home","Away")] )),x))
 
 # calculate number of games in a week
 teams$numGames <- sapply(teamOpponents, length)
 
 # find mean gaCoeff of opponents
-teamOppCoeff <- lapply(teamOpponents, function(x) laply(x,function(x) teams$GACoeff[teams$Team == x]))
+teamOppCoeff <- lapply(teamOpponents, 
+  function(x) laply(x,function(x) teams$GACoeff[teams$Team == x]))
 teams$oppCoeff <- sapply(teamOppCoeff,mean)
 
 # add team based statistics to skater rows
-overall <- merge(overall,teams[c("yTeam","numGames","oppCoeff")], by.x="yTeam", by.y = "yTeam", all.x=T)
+overall <- merge(overall,
+  teams[c("yTeam","numGames","oppCoeff")],
+  by.x="yTeam", by.y = "yTeam", all.x=T)
 
 # remove players that are inactive
 inactives <- loadInactives()
@@ -109,20 +115,18 @@ overall$vukProjPts <- overall$pPtsPerG*overall$numGames*overall$oppCoeff
 overall$vukProjPts[is.na(overall$vukProjPts)] <- 0
 overall$pPtsPerG[is.na(overall$pPtsPerG)] <- 0
 sampleSize <- 20
-overall$BayesProjPts <- ((sampleSize*overall$pPtsPerG + overall$Pts)/(sampleSize+overall$GP))*overall$numGames*overall$oppCoeff
+overall$BayesProjPts <- ((sampleSize*overall$pPtsPerG + overall$Pts)/
+                    (sampleSize+overall$GP))*overall$numGames*overall$oppCoeff
 
-#overall <- overall[order(-overall$BayesProjPts),]
-#overall <- 
 
 # kmeans clustering
 kmeansFit <-with(overall,(kmeans(ActualProjPts+vukProjPts, 70)))
 overall <- data.frame(overall,as.factor(kmeansFit$cluster))
 
 overall <- overall[order(-overall$BayesProjPts),]
-ggplot(overall[1:50,],aes(ActualProjPts,vukProjPts))+
-  ggtitle(paste("Week ",weekInput," Projections"))+
+ggplot(overall[1:50,],aes(ActualProjPts,vukProjPts)) +
+  ggtitle(paste("Week ",weekInput," Projections")) +
   geom_point(aes(size=numGames, color=as.factor.kmeansFit.cluster.)) +
-    scale_radius(range = c(1,5)) + 
-  #coord_cartesian(xlim=c(2,5.75),ylim=c(2,5.75))  +
+  scale_radius(range = c(1,5)) + 
   geom_text(aes(label=Name,vjust=-1))
 

@@ -61,8 +61,9 @@ fantasyWeekFind <- function(date,schedule=fantasySchedule){
 
 # pulls the gamelog for a playerID from hockey-reference
 loadPlayerLog <- function(ID,year="2016"){
-    url <- paste("http://www.hockey-reference.com/players/",ID[1],"/",ID,"/gamelog/",year,"/",
-        sep="")
+    url <- paste("http://www.hockey-reference.com/players/",
+                 ID[1],"/",ID,"/gamelog/",year,"/",
+                 sep="")
     playerLog <- loadStatsUrl(url)
     playerLog <- subset(playerLog, Age != "Age")
     playerLog$Date <- as.Date(playerLog$Date)
@@ -71,8 +72,8 @@ loadPlayerLog <- function(ID,year="2016"){
 }
 
 
-# function to pull all hockey-reference player IDs from the alphabetical lists of all
-# skaters. used once and then written to a csv file.
+# function to pull all hockey-reference player IDs from the alphabetical lists
+# of all skaters. used once and then written to a csv file.
 loadHRIDs <- function(){
     Name <- ""
     ID <- 0
@@ -81,7 +82,8 @@ loadHRIDs <- function(){
         if(letter == 'x'){
             next
         }
-        doc <- htmlParse(paste("http://www.hockey-reference.com/players/",letter,"/skaters.html",sep=""))
+        doc <- htmlParse(paste("http://www.hockey-reference.com/players/",
+                               letter,"/skaters.html",sep=""))
         Name <- getNodeSet(doc,"//table[@id='skaters']//td[3][.='2016']
                                   /preceding-sibling::td[2]/strong/a/text()")
         Name <- sapply(Name, xmlValue)
@@ -102,15 +104,16 @@ playerWeeklyReport <- function(playerName,playerID,week){
     weeks <- 1:week
     points <- numeric(0)
     for(i in weeks){
-        temp <- subset(playerLog, Date >= fantasySchedule[i,1] & Date <= fantasySchedule[i,2])
+        temp <- subset(playerLog, Date >= fantasySchedule[i,1] &
+                           Date <= fantasySchedule[i,2])
         points <- c(points,sum(temp$PTS))  
     }
     report <- cbind(playerName,weeks,points)
     data.frame(report)
 }
 
-# returns a dataframe with every player and the points theyve gotten in each fantasy week
-# SHOULD MAKE THIS DF TIDY, WEEKS ARE VARIABLES
+# returns a dataframe with every player and the points theyve gotten in each
+# fantasy week
 allPlayerWeeklyReport <- function(){
     players <- read.csv("playerIDs.csv",stringsAsFactors = F)
     wk <- fantasyWeekFind(Sys.Date())
@@ -130,7 +133,8 @@ allPlayerWeeklyReport <- function(){
     report
 }
 
-## function to test whether I have the correct statistics in the history, based on hockey-reference game logs
+# function to test whether I have the correct statistics in the history, based
+#   on hockey-reference game logs
 historySanityTest <- function(history){
     playerIDs <- read.csv("playerIDs.csv",stringsAsFactors = F)
     playerWeeks <- select(history, Name = Pick, Week,Games,Total)
@@ -150,8 +154,11 @@ loadInactives <- function(){
 
 # load fantasy schedule from the google sheet
 loadFantasySchedule <- function(){
-    fantasySchedule <- ss %>% gs_read("Standings / Rules",range=cell_limits(c(1,6),c(28,8)))
-    fantasySchedule$Starts <- as.Date(as.character(fantasySchedule$Starts), "%m/%d/%Y")
-    fantasySchedule$Ends <- as.Date(as.character(fantasySchedule$Ends),"%m/%d/%Y")
+    fantasySchedule <- ss %>% gs_read("Standings / Rules",
+                                      range=cell_limits(c(1,6),c(28,8)))
+    fantasySchedule$Starts <- as.Date(as.character(fantasySchedule$Starts),
+                                      "%m/%d/%Y")
+    fantasySchedule$Ends <- as.Date(as.character(fantasySchedule$Ends),
+                                    "%m/%d/%Y")
     fantasySchedule
 }
