@@ -28,6 +28,7 @@ getWeekSummary <- function(week){
 }
 
 monteCarloSimulation <- function(summary,numSims){
+    poisLambda <- 0.78
     simulation <- data.frame(Owner = c("Jumbo","Victor","Will"),
                              wins = c(0,0,0),
                              Zeros = summary$Zeros,
@@ -41,7 +42,7 @@ monteCarloSimulation <- function(summary,numSims){
         sim <- summary
         players <- 1:nrow(summary)
         for(player in players){
-            pts <- rpois(summary$GamesRemaining[player],0.74)
+            pts <- rpois(summary$GamesRemaining[player],poisLambda)
             sim$Points[player] <- sum(pts) + summary$Points[player]
             sim$Zeros[player] <- sim$Zeros[player] + sum(pts==0)
             sim$Singles[player] <- sim$Singles[player] + sum(pts==1)
