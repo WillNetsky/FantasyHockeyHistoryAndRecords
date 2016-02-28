@@ -1,5 +1,5 @@
 library(XML)
-library(plyr)
+library(dplyr)
 library(ggplot2)
 library(googlesheets)
 
@@ -75,15 +75,20 @@ if(manualWeek){
 #automated week input
     weekInput <- fantasyWeekFind(Sys.Date())
 }
+
 # subset the NHL Schedule for this week
 NHLSchedule <- subset(NHLSchedule, Week==weekInput)
 
 #find opponents
-teamNames <- as.vector(teams$Team)
-teamOpponents <- sapply(teamNames, 
-  function(x) setdiff(as.vector(t(NHLSchedule[which(NHLSchedule$Away == x |
-                                  NHLSchedule$Home == x),
-                                  c("Home","Away")] )),x))
+temp <- NHLSchedule
+temp$Home <- NHLSchedule$Away
+temp$Away <- NHLSchedule$Home
+NHLSchedule$HomeOrAway <- "H"
+temp$HomeOrAway <- "A"
+NHLSchedule <- rbind(NHLSchedule,temp)
+NHLSchedule <- rename(NHLSchedule,c("Away" = "Team", "Home" = "Opponent"))
+teamOpponents <- lapply(teams$Team,
+  function(x) NHLSchedule[NHLSchedule$Team %in% x,"Opponent"])
 
 # calculate number of games in a week
 teams$numGames <- sapply(teamOpponents, length)
@@ -129,4 +134,8 @@ ggplot(overall[1:50,],aes(ActualProjPts,vukProjPts)) +
   geom_point(aes(size=numGames, color=as.factor.kmeansFit.cluster.)) +
   scale_radius(range = c(1,5)) + 
   geom_text(aes(label=Name,vjust=-1))
+
+overall <- overall[c("yTeam","Name","GP","Pts","pGP","pPts","numGames",
+                     "oppCoeff","ActualProjPts","RegProjPts","vukProjPts",
+                     "BayesProjPts")]
 
