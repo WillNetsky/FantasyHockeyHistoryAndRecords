@@ -110,7 +110,7 @@ getOwnerWeeks <- function(history){
 
 getPlayerSeason <- function(history){
     playerTotals <- group_by(history, Pick) %>% mutate(TimesPicked = n()) 
-    playerTotals <- summarize(playerTotals,TimesPicked = max(TimesPicked),Points = sum(Total), MVPs = sum(MVP,na.rm=T))
+    playerTotals <- summarize(playerTotals,TimesPicked = max(TimesPicked),ADP = mean(Pick.),Points = sum(Total), MVPs = sum(MVP,na.rm=T))
     playerTotals <- mutate(playerTotals, PtsPerWeek = Points/TimesPicked)
     playerTotals <- arrange(playerTotals, desc(Points))
     playerTotals
