@@ -4,7 +4,7 @@ library(ggplot2)
 library(googlesheets)
 
 # Set working directory and cleanup the environment
-setwd("C:/Users/Netsky/Dropbox/Code/Fantasy Hockey")
+#setwd("C:/Users/Netsky/Dropbox/Code/Fantasy Hockey")
 rm(list = ls())
 
 source("loadStats.R")

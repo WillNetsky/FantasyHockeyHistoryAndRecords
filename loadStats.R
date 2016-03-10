@@ -1,6 +1,5 @@
 library(data.table)
 library(XML)
-library(plyr)
 library(dplyr)
 library(ggplot2)
 
