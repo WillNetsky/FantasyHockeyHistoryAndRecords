@@ -27,7 +27,9 @@ getWeekSummary <- function(week){
     summary
 }
 
-monteCarloSimulation <- function(summary,numSims){
+monteCarloSimulationCurrent <- function(numSims=1000){
+    summary <- getWeekView()
+    summary <- getWeekSummary(summary)
     poisLambda <- 0.78
     simulation <- data.frame(Owner = c("Jumbo","Victor","Will"),
                              wins = c(0,0,0),
