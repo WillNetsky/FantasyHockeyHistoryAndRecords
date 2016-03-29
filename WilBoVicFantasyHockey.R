@@ -1,5 +1,7 @@
 library(XML)
+
 library(dplyr)
+library(plyr)
 library(ggplot2)
 library(googlesheets)
 
@@ -86,7 +88,7 @@ temp$Away <- NHLSchedule$Home
 NHLSchedule$HomeOrAway <- "H"
 temp$HomeOrAway <- "A"
 NHLSchedule <- rbind(NHLSchedule,temp)
-NHLSchedule <- rename(NHLSchedule,c("Away" = "Team", "Home" = "Opponent"))
+NHLSchedule <- rename(NHLSchedule,c("Away" = "Team" , "Home" = "Opponent"))
 teamOpponents <- lapply(teams$Team,
   function(x) NHLSchedule[NHLSchedule$Team %in% x,"Opponent"])
 
